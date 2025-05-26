@@ -1,12 +1,26 @@
 {
   "name": "server",
   "scripts": {
-    "dev": "bun run --hot src/index.ts"
+    "dev": "bun run --hot src/index.ts",
+    "db:docker": "docker-compose up -d",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:seed": "prisma db seed"
+  },
+  "prisma": {
+    "seed": "bun prisma/seed.ts"
   },
   "dependencies": {
-    "hono": "^4.7.10"
+    "@hono/trpc-server": "^0.3.4",
+    "@prisma/client": "^6.8.2",
+    "@trpc/client": "^11.1.2",
+    "@trpc/server": "^11.1.2",
+    "dotenv": "^16.5.0",
+    "hono": "^4.7.10",
+    "zod": "^3.25.28"
   },
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "prisma": "^6.8.2"
   }
 }
