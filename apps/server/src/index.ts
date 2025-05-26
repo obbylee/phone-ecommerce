@@ -11,15 +11,14 @@ const app = new Hono().basePath("/api");
 app.use(logger());
 
 app.use(
-  "/*",
   cors({
     origin: process.env.CORS_ORIGIN || "",
-    allowMethods: ["GET", "POST", "OPTIONS"],
+    allowMethods: ["GET", "POST", "PATCH", "PUT", "OPTIONS"],
   })
 );
 
 app.use(
-  "/trpc/*",
+  // "/trpc/*",
   trpcServer({
     router: appRouter,
   })

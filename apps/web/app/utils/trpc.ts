@@ -7,7 +7,7 @@ import { createTRPCClient, httpBatchLink } from "@trpc/client";
 export const trpcClient = createTRPCClient<AppRouter>({
   links: [
     httpBatchLink({
-      url: `${import.meta.env.VITE_SERVER_URL}/api/trpc/`,
+      url: `${import.meta.env.VITE_SERVER_URL}/api`,
     }),
   ],
 });
