@@ -10,5 +10,7 @@ export default [
     index("routes/onboard.tsx"),
     route("product", "./routes/product.tsx"),
     route("product/:slug", "./routes/productDetails.tsx"),
+    route("login", "./routes/login.tsx"),
+    route("register", "./routes/register.tsx"),
   ]),
 ] satisfies RouteConfig;

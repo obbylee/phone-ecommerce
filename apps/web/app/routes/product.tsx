@@ -76,7 +76,13 @@ export default function Route({ loaderData }: Route.ComponentProps) {
             </div>
           </div>
 
-          <Button>Apply filters</Button>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 ">
+            <Button type="submit">Apply filters</Button>
+
+            <Button variant="outline" asChild>
+              <Link to="/product">Reset filters</Link>
+            </Button>
+          </div>
         </Form>
       </aside>
       <main className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
