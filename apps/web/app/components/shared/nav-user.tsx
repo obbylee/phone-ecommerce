@@ -1,4 +1,10 @@
-import { LogOutIcon, MoreVerticalIcon, UserCircleIcon } from "lucide-react";
+import {
+  GlobeIcon,
+  LogOutIcon,
+  MoreVerticalIcon,
+  ShoppingCart,
+  UserCircleIcon,
+} from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import {
   DropdownMenu,
@@ -85,9 +91,21 @@ export function NavUser({
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
           <DropdownMenuItem asChild>
-            <Link to="/">
+            <Link to="/admin">
               <UserCircleIcon />
               Dashboard
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link to="/cart">
+              <ShoppingCart />
+              Cart
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link to="/product">
+              <GlobeIcon />
+              Explore product
             </Link>
           </DropdownMenuItem>
         </DropdownMenuGroup>

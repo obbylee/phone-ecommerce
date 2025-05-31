@@ -31,6 +31,7 @@ export default function Route() {
         <Form
           action="/product"
           className="flex flex-col sm:flex-row gap-4 justify-center items-center w-full max-w-xl mx-auto"
+          autoComplete="off"
         >
           <Input
             type="text"

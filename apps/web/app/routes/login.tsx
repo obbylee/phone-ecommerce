@@ -78,10 +78,11 @@ export default function Route() {
             </p>
           </div>
           <div className="grid gap-6">
-            <Form {...form} key="login">
+            <Form {...form}>
               <form
                 onSubmit={form.handleSubmit(onSubmit)}
                 className="space-y-8"
+                autoComplete="off"
               >
                 <FormField
                   control={form.control}

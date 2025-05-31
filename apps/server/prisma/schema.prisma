@@ -18,6 +18,7 @@ model User {
   updatedAt     DateTime
   sessions      Session[]
   accounts      Account[]
+  carts         Cart[] // Relation to Cart model
 
   @@unique([email])
   @@map("user")
@@ -68,6 +69,18 @@ model Verification {
   @@map("verification")
 }
 
+model ProductCategory {
+  id          String    @id @default(ulid())
+  name        String    @unique
+  slug        String    @unique
+  description String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  products    Product[] // Relation to Product model
+
+  @@map("product_category")
+}
+
 model Product {
   id                   String   @id @default(ulid())
   sku                  String   @unique
@@ -76,12 +89,43 @@ model Product {
   description          String
   price                Decimal
   imageUrl             String?
-  stockQuantity        Int?
-  minimumOrderQuantity Int?
+  stockQuantity        Int
+  minimumOrderQuantity Int
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
-  // Added fields
   isFeatured           Boolean  @default(false)
   isActive             Boolean  @default(true)
-  category             String?
+
+  // Relation to ProductCategory
+  categoryId String?
+  category   ProductCategory? @relation(fields: [categoryId], references: [id])
+
+  cartItems CartItem[] // Relation to CartItem model
+
+  @@map("product")
+}
+
+model Cart {
+  id        String     @id @default(ulid())
+  userId    String     @unique // Each user can only have one active cart
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  items     CartItem[] // Relation to CartItem model
+
+  @@map("cart")
+}
+
+model CartItem {
+  id        String   @id @default(ulid())
+  cartId    String
+  cart      Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  quantity  Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([cartId, productId]) // Ensures a product is only once in a given cart
+  @@map("cart_item")
 }

@@ -1,6 +1,12 @@
+import "dotenv/config";
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { PrismaClient } from "../../prisma/generated/prisma-client-js";
+
+const ALLOWED_CORS = [
+  process.env.CORS_ORIGIN ?? "",
+  process.env.BETTER_AUTH_URL ?? "",
+];
 
 const prisma = new PrismaClient();
 
@@ -11,4 +17,5 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
   },
+  trustedOrigins: ALLOWED_CORS,
 });

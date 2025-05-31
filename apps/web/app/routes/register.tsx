@@ -69,7 +69,7 @@ export default function Route() {
         },
         onSuccess: (ctx) => {
           toast.info("User successfuly registered!");
-          navigate("/login", { replace: true });
+          navigate("/", { replace: true });
         },
         onError: (ctx) => {
           setIsLoading(false);
@@ -95,6 +95,7 @@ export default function Route() {
               <form
                 onSubmit={form.handleSubmit(onSubmit)}
                 className="space-y-8"
+                autoComplete="off"
               >
                 <FormField
                   control={form.control}

@@ -14,6 +14,7 @@ export const appRouter = router({
           minPrice: z.number().nullish(),
           maxPrice: z.number().nullish(),
           minOrder: z.number().nullish(),
+          categories: z.array(z.string().nullish()),
         })
       )
       .query(async ({ input }) => {
@@ -35,9 +36,18 @@ export const appRouter = router({
         if (input.maxPrice) {
           Object.assign(whereConditions, { price: { lte: input.maxPrice } });
         }
+
         if (input.minOrder) {
           Object.assign(whereConditions, {
             minimumOrderQuantity: { gte: input.minOrder },
+          });
+        }
+
+        if (input.categories && input.categories.length > 0) {
+          Object.assign(whereConditions, {
+            categoryId: {
+              in: input.categories,
+            },
           });
         }
 
@@ -67,7 +77,7 @@ export const appRouter = router({
           minimumOrderQuantity: z.number(),
           isFeatured: z.boolean(),
           isActive: z.boolean(),
-          category: z.string(),
+          categoryId: z.string(),
           userId: z.string(),
         })
       )
@@ -77,6 +87,10 @@ export const appRouter = router({
         });
         return result;
       }),
+    categories: publicProcedure.query(async () => {
+      const result = await prisma.productCategory.findMany();
+      return result;
+    }),
     update: publicProcedure
       .input(
         z.object({
@@ -90,7 +104,7 @@ export const appRouter = router({
           minimumOrderQuantity: z.number(),
           isFeatured: z.boolean(),
           isActive: z.boolean(),
-          category: z.string(),
+          categoryId: z.string(),
           userId: z.string(),
         })
       )
@@ -100,6 +114,141 @@ export const appRouter = router({
           data: input,
         });
         return result;
+      }),
+  },
+  admin: {
+    product: {
+      list: publicProcedure.query(async () => {
+        const products = await prisma.product.findMany();
+        return products;
+      }),
+    },
+  },
+  cart: {
+    getCart: publicProcedure
+      .input(
+        z.object({
+          userId: z.string().min(1, "User ID is required."), // TODO: user session and context
+        })
+      )
+      .query(async ({ input }) => {
+        const { userId } = input;
+
+        const cart = await prisma.cart.findUnique({
+          where: { userId },
+          include: {
+            items: {
+              include: {
+                product: {
+                  // Include product details for each item in the cart
+                  select: {
+                    id: true,
+                    name: true,
+                    sku: true,
+                    price: true,
+                    imageUrl: true,
+                    stockQuantity: true,
+                    minimumOrderQuantity: true,
+                  },
+                },
+              },
+            },
+          },
+        });
+
+        if (!cart) {
+          return {
+            id: null,
+            userId: userId,
+            items: [],
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          };
+        }
+
+        return cart;
+      }),
+    addToCart: publicProcedure
+      .input(
+        z.object({
+          userId: z.string(), // TODO: context + session
+          productId: z.string(),
+          quantity: z.number().int().min(1),
+        })
+      )
+      .mutation(async ({ input }) => {
+        const { userId, productId, quantity } = input;
+
+        // Use a transaction
+        const cartOperationResult = await prisma.$transaction(async (tx) => {
+          let cart = await tx.cart.findUnique({ where: { userId } });
+
+          if (!cart) {
+            const userExists = await tx.user.findUnique({
+              where: { id: userId },
+            });
+
+            if (!userExists) {
+              throw new Error("User not found. Cannot create cart.");
+            }
+            // create cart
+            cart = await tx.cart.create({ data: { userId } });
+          }
+
+          const product = await tx.product.findUnique({
+            where: { id: productId },
+          });
+
+          if (!product) {
+            throw new Error("Product not found.");
+          }
+
+          if (quantity < product.minimumOrderQuantity) {
+            throw new Error(
+              `Minimum order quantity for ${product.name} is ${product.minimumOrderQuantity}.`
+            );
+          }
+          if (product.stockQuantity < quantity) {
+            throw new Error(
+              `Insufficient stock for ${product.name}. Available: ${product.stockQuantity}`
+            );
+          }
+
+          const existingCartItem = await tx.cartItem.findUnique({
+            where: {
+              cartId_productId: { cartId: cart.id, productId: productId },
+            },
+          });
+
+          let updatedCartItem;
+          if (existingCartItem) {
+            updatedCartItem = await tx.cartItem.update({
+              where: { id: existingCartItem.id },
+              data: { quantity: existingCartItem.quantity + quantity },
+            });
+          } else {
+            updatedCartItem = await tx.cartItem.create({
+              data: {
+                cartId: cart.id,
+                productId: productId,
+                quantity: quantity,
+              },
+            });
+          }
+
+          await tx.product.update({
+            where: { id: productId },
+            data: { stockQuantity: { decrement: quantity } },
+          });
+
+          return { cart, updatedCartItem };
+        });
+
+        return {
+          message: "Product added to cart successfully!",
+          cartId: cartOperationResult.cart.id,
+          cartItem: cartOperationResult.updatedCartItem,
+        };
       }),
   },
 });

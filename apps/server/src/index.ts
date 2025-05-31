@@ -8,13 +8,18 @@ import prisma from "../prisma/index";
 import { auth } from "./lib/auth";
 import { createContext } from "./lib/context";
 
+const ALLOWED_CORS = [
+  process.env.CORS_ORIGIN ?? "",
+  process.env.BETTER_AUTH_URL ?? "",
+];
+
 const app = new Hono();
 
 app.use(logger());
 
 app.use(
   cors({
-    origin: "*",
+    origin: ALLOWED_CORS,
     allowMethods: ["GET", "POST", "PATCH", "PUT", "OPTIONS"],
     allowHeaders: ["Content-Type", "Authorization"],
     credentials: true,
