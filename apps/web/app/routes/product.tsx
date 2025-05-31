@@ -6,6 +6,7 @@ import { Button } from "~/components/ui/button";
 import { toast } from "sonner";
 import { trpcClient } from "~/utils/trpc";
 import { formatCurrency } from "~/utils/formatCurrency";
+import { Checkbox } from "~/components/ui/checkbox";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -20,6 +21,7 @@ export async function clientLoader({ request }: Route.LoaderArgs) {
   const minPrice = baseUrl.searchParams.get("minPrice");
   const maxPrice = baseUrl.searchParams.get("maxPrice");
   const minOrder = baseUrl.searchParams.get("minOrder");
+  const category = baseUrl.searchParams.getAll("category");
 
   try {
     const payload = {
@@ -27,9 +29,11 @@ export async function clientLoader({ request }: Route.LoaderArgs) {
       minPrice: parseNumberParam(minPrice),
       maxPrice: parseNumberParam(maxPrice),
       minOrder: parseNumberParam(minOrder),
+      categories: category,
     };
-    const response = await trpcClient.product.list.query(payload);
-    return { data: response };
+    const products = await trpcClient.product.list.query(payload);
+    const categories = await trpcClient.product.categories.query();
+    return { products: products, categories: categories };
   } catch (error) {
     if (error instanceof Error) {
       toast.error("Error fetching products");
@@ -41,17 +45,30 @@ export async function clientLoader({ request }: Route.LoaderArgs) {
 }
 
 export default function Route({ loaderData }: Route.ComponentProps) {
-  const { data } = loaderData;
+  const { products, categories } = loaderData;
   return (
     <div className="mx-auto max-w-[1200px] grid grid-cols-1 md:grid-cols-[250px_1fr] gap-4 p-4">
-      <aside className="bg-gray-100 dark:bg-black dark:border-gray-500 rounded-md p-6 border md:max-h-[350px] md:sticky md:top-22">
+      <aside className="bg-gray-100 dark:bg-black dark:border-gray-500 rounded-md p-6 border md:max-h-[490px] md:sticky md:top-22">
         <h3 className="text-lg font-semibold mb-4">Filter Options</h3>
 
-        <Form action="/product">
+        <Form action="/product" autoComplete="off">
           <div className="mb-4">
             <Label className="mb-2">Keywords</Label>
             <div className="flex items-center">
               <Input type="text" name="search" placeholder="keywords" />
+            </div>
+          </div>
+
+          <div className="mb-4">
+            <Label className="mb-2">Categories</Label>
+            <div className="flex flex-col items-start gap-3">
+              {categories &&
+                categories.map((category) => (
+                  <div key={category.id} className="flex items-center gap-3">
+                    <Checkbox name="category" value={category.id} />
+                    <Label className="font-light">{category.name}</Label>
+                  </div>
+                ))}
             </div>
           </div>
 
@@ -76,12 +93,18 @@ export default function Route({ loaderData }: Route.ComponentProps) {
             </div>
           </div>
 
-          <Button>Apply filters</Button>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 ">
+            <Button type="submit">Apply filters</Button>
+
+            <Button variant="outline" asChild>
+              <Link to="/product">Reset filters</Link>
+            </Button>
+          </div>
         </Form>
       </aside>
       <main className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {data && data.length > 0 ? (
-          data.map((product) => (
+        {products && products.length > 0 ? (
+          products.map((product) => (
             <Link key={product.sku} to={`./${product.slug}`} viewTransition>
               <div className="bg-white dark:bg-black min-h-[490px] border border-gray-200 dark:border-gray-500 rounded-md p-4 shadow-sm">
                 <div className="bg-gray-100 rounded-md h-64">
