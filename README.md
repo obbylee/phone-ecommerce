@@ -12,6 +12,12 @@ A modern web application built to showcase a catalog of realistic mobile phones,
 - **Bun Runtime:** Leverages the speed and efficiency of Bun for dependency management and potentially for server-side logic.
 - **Database:** A well-structured database to store and manage product information.
 - **Live Deployment:** The application is publicly deployed for easy access.
+- **Product Search:** Ability to search products by keyword.
+- **Advanced Product Browse:** Features for sorting, filtering, and pagination of products based on various criteria.
+- **Product Categories:** Organization of products into distinct categories for easier navigation.
+- **User Authentication & Authorization:** Basic implementation of user sign-up, login, and role-based access control.
+- **Shopping Cart & Checkout:** A complete flow for adding products to a cart and proceeding through a checkout process.
+- **Admin Dashboard:** A dedicated interface for administrators to manage products, monitor transactions, and oversee application data.
 
 ## 🚀 Live Demo
 
@@ -34,7 +40,7 @@ For the very latest features, bug fixes, and ongoing development work, please **
 - **API Layer:** **tRPC**
 - **ORM:** **Prisma**
 - **Database:** **PostgreSQL**
-  <!-- * **Authentication (Optional):** **Better Auth** -->
+  - **Authentication (Optional):** **Better Auth**
   <!-- * **Monorepo Tool (Optional):** **Turborepo** -->
 - **Containerization:** **Docker Compose** (primarily for local database setup)
 - **Tools:** **ESLint** with **Prettier**
@@ -143,6 +149,79 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model User {
+  id            String    @id
+  name          String
+  email         String
+  emailVerified Boolean
+  image         String?
+  createdAt     DateTime
+  updatedAt     DateTime
+  sessions      Session[]
+  accounts      Account[]
+  carts         Cart[] // Relation to Cart model
+
+  @@unique([email])
+  @@map("user")
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String
+  createdAt DateTime
+  updatedAt DateTime
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([token])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime
+  updatedAt             DateTime
+
+  @@map("account")
+}
+
+model Verification {
+  id         String    @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime?
+  updatedAt  DateTime?
+
+  @@map("verification")
+}
+
+model ProductCategory {
+  id          String    @id @default(ulid())
+  name        String    @unique
+  slug        String    @unique
+  description String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  products    Product[] // Relation to Product model
+
+  @@map("product_category")
+}
+
 model Product {
   id                   String   @id @default(ulid())
   sku                  String   @unique
@@ -151,14 +230,45 @@ model Product {
   description          String
   price                Decimal
   imageUrl             String?
-  stockQuantity        Int?
-  minimumOrderQuantity Int?
+  stockQuantity        Int
+  minimumOrderQuantity Int
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
-  // Added fields
   isFeatured           Boolean  @default(false)
   isActive             Boolean  @default(true)
-  category             String?
+
+  // Relation to ProductCategory
+  categoryId String?
+  category   ProductCategory? @relation(fields: [categoryId], references: [id])
+
+  cartItems CartItem[] // Relation to CartItem model
+
+  @@map("product")
+}
+
+model Cart {
+  id        String     @id @default(ulid())
+  userId    String     @unique // Each user can only have one active cart
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  items     CartItem[] // Relation to CartItem model
+
+  @@map("cart")
+}
+
+model CartItem {
+  id        String   @id @default(ulid())
+  cartId    String
+  cart      Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  quantity  Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([cartId, productId]) // Ensures a product is only once in a given cart
+  @@map("cart_item")
 }
 ```
 
