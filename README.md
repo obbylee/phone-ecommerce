@@ -15,9 +15,9 @@ A modern web application built to showcase a catalog of realistic mobile phones,
 - **Product Search:** Ability to search products by keyword.
 - **Advanced Product Browse:** Features for sorting, filtering, and pagination of products based on various criteria.
 - **Product Categories:** Organization of products into distinct categories for easier navigation.
-- **User Authentication & Authorization:** Basic implementation of user sign-up, login, and role-based access control.
-- **Shopping Cart & Checkout:** A complete flow for adding products to a cart and proceeding through a checkout process.
-- **Admin Dashboard:** A dedicated interface for administrators to manage products, monitor transactions, and oversee application data.
+  <!-- - **User Authentication & Authorization:** Basic implementation of user sign-up, login, and role-based access control. -->
+  <!-- - **Shopping Cart & Checkout:** A complete flow for adding products to a cart and proceeding through a checkout process. -->
+  <!-- - **Admin Dashboard:** A dedicated interface for administrators to manage products, monitor transactions, and oversee application data. -->
 
 ## 🚀 Live Demo
 
