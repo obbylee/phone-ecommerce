@@ -17,14 +17,7 @@ const app = new Hono();
 
 app.use(logger());
 
-app.use(
-  cors({
-    origin: ALLOWED_CORS,
-    allowMethods: ["GET", "POST", "PATCH", "PUT", "OPTIONS"],
-    allowHeaders: ["Content-Type", "Authorization"],
-    credentials: true,
-  })
-);
+app.use(cors());
 
 app.on(["POST", "GET"], "/api/auth/**", (c) => auth.handler(c.req.raw));
 
