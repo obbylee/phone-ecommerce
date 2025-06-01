@@ -58,7 +58,7 @@ export default function Route({ loaderData }: Route.ComponentProps) {
             <img
               alt={product?.name}
               src={product?.imageUrl || ""}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-contain"
             />
           </div>
         </div>

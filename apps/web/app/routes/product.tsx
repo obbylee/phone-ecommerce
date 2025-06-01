@@ -105,7 +105,11 @@ export default function Route({ loaderData }: Route.ComponentProps) {
       <main className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {products && products.length > 0 ? (
           products.map((product) => (
-            <Link key={product.sku} to={`./${product.slug}`} viewTransition>
+            <Link
+              key={product.sku}
+              to={`./${encodeURIComponent(product.slug)}`}
+              viewTransition
+            >
               <div className="bg-white dark:bg-black min-h-[490px] border border-gray-200 dark:border-gray-500 rounded-md p-4 shadow-sm">
                 <div className="bg-gray-100 rounded-md h-64">
                   <img

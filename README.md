@@ -40,7 +40,7 @@ For the very latest features, bug fixes, and ongoing development work, please **
 - **API Layer:** **tRPC**
 - **ORM:** **Prisma**
 - **Database:** **PostgreSQL**
-  - **Authentication (Optional):** **Better Auth**
+  <!-- - **Authentication (Optional):** **Better Auth** -->
   <!-- * **Monorepo Tool (Optional):** **Turborepo** -->
 - **Containerization:** **Docker Compose** (primarily for local database setup)
 - **Tools:** **ESLint** with **Prettier**
