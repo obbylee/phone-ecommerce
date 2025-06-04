@@ -5,6 +5,7 @@ import { logger } from "hono/logger";
 import { trpcServer } from "@hono/trpc-server";
 import { appRouter } from "./routers/index";
 import prisma from "../prisma/index";
+import { createContext } from "./lib/context";
 
 const app = new Hono().basePath("/api");
 
@@ -14,13 +15,17 @@ app.use(
   cors({
     origin: process.env.CORS_ORIGIN || "",
     allowMethods: ["GET", "POST", "PATCH", "PUT", "OPTIONS"],
+    allowHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
   })
 );
 
 app.use(
-  // "/trpc/*",
   trpcServer({
     router: appRouter,
+    createContext: (_opts, context) => {
+      return createContext({ honoContext: context });
+    },
   })
 );
 

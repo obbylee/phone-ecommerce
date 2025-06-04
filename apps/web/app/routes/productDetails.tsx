@@ -1,5 +1,5 @@
-import { Input } from "~/components/ui/input";
 import type { Route } from "./+types/productDetails";
+import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Button } from "~/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
@@ -8,6 +8,18 @@ import { trpcClient } from "~/utils/trpc";
 import { toast } from "sonner";
 import { formatCurrency } from "~/utils/formatCurrency";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
+import { useForm } from "react-hook-form";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormMessage,
+} from "~/components/ui/form";
+
+type CartFormValues = {
+  minOrder: number;
+};
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -19,7 +31,6 @@ export function meta({}: Route.MetaArgs) {
 export async function clientLoader({ params }: Route.LoaderArgs) {
   try {
     const response = await trpcClient.product.bySlug.query(params.slug);
-
     return { product: response };
   } catch (error) {
     if (error instanceof Error) {
@@ -33,6 +44,37 @@ export async function clientLoader({ params }: Route.LoaderArgs) {
 
 export default function Route({ loaderData }: Route.ComponentProps) {
   const { product } = loaderData;
+
+  const form = useForm<CartFormValues>({
+    defaultValues: {
+      minOrder: product?.minimumOrderQuantity ?? 1,
+    },
+    mode: "onChange", // Or "onBlur", helps revalidate
+  });
+
+  async function onSubmit(values: CartFormValues) {
+    if (!product || !product.id) {
+      toast.error("Product data is not available. Please try again.");
+      return; // Exit the function early
+    }
+
+    try {
+      const result = await trpcClient.cart.addToCart.mutate({
+        productId: product.id,
+        quantity: values.minOrder,
+      });
+
+      toast.success(result.message);
+    } catch (error) {
+      if (error instanceof Error) {
+        toast.error(error.message);
+        return;
+      }
+      toast.error("Internal server error");
+      return;
+    }
+  }
+
   if (!product || !Object.keys(product).length)
     return <h3 className="text-lg"> No product available.</h3>;
 
@@ -58,65 +100,103 @@ export default function Route({ loaderData }: Route.ComponentProps) {
             <img
               alt={product?.name}
               src={product?.imageUrl || ""}
-              className="w-full h-full object-contain"
+              className="w-full h-full object-cover"
             />
           </div>
         </div>
 
-        <div className="min-h-[400px]">
-          <h1 className="text-lg md:text-2xl">{product?.slug}</h1>
-          <h2 className="text-sm md:text-lg my-4 bg-gray-100 dark:bg-gray-500 px-2.5 py-2 rounded-sm">
-            {product?.name}
-          </h2>
+        <Form {...form}>
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="min-h-[400px]"
+          >
+            <h1 className="text-lg md:text-2xl">{product?.slug}</h1>
+            <h2 className="text-sm md:text-lg my-4 bg-gray-100 dark:bg-gray-500 px-2.5 py-2 rounded-sm">
+              {product?.name}
+            </h2>
 
-          <h1 className="text-lg md:text-3xl mb-4">
-            {formatCurrency(parseFloat(product.price))}
-          </h1>
-          <div className="grid w-full max-w-sm items-center gap-1.5 mb-4">
-            <div className="flex gap-4">
-              <Label className="text-sm md:text-md">
-                Stock quantity: {product.stockQuantity}
-              </Label>
-              <Label className="text-sm md:text-md">
-                Min Order. {product.minimumOrderQuantity} Pieces
-              </Label>
+            <h1 className="text-lg md:text-3xl mb-4">
+              {formatCurrency(parseFloat(product.price))}
+            </h1>
+            <div className="grid w-full max-w-sm items-center gap-1.5 mb-4">
+              <div className="flex gap-4">
+                <Label className="text-sm md:text-md">
+                  Stock quantity: {product.stockQuantity}
+                </Label>
+                <Label className="text-sm md:text-md">
+                  Min Order. {product.minimumOrderQuantity} Pieces
+                </Label>
+              </div>
+
+              <FormField
+                control={form.control}
+                name="minOrder"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        placeholder={`Minimum ${
+                          product.minimumOrderQuantity ?? 1
+                        } orders`}
+                        {...form.register("minOrder", {
+                          required: "Order quantity is required.",
+                          min: {
+                            value: product.minimumOrderQuantity ?? 1,
+                            message: `Order must be at least ${
+                              product.minimumOrderQuantity ?? 1
+                            } orders.`,
+                          },
+
+                          max: {
+                            value: product.stockQuantity ?? 9999,
+                            message: `Order cannot exceed available stock of ${
+                              product.stockQuantity ?? 9999
+                            } orders.`,
+                          },
+                          valueAsNumber: true, // <--- IMPORTANT: Converts input string to number
+                        })}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
-            <Input
-              type="number"
-              id="orderQuantity"
-              placeholder="Order quantity"
-              className="placeholder:text-sm"
-              min={2}
-            />
-          </div>
-          <div className="grid grid-cols-1 gap-3">
-            <Button className="w-full py-5 text-md md:text-lg" size="lg">
-              Buy this item
-            </Button>
-            <Button
-              className="w-full py-5 text-md md:text-lg"
-              variant="outline"
-              size="lg"
-            >
-              Add to cart
-            </Button>
-          </div>
+            <div className="grid grid-cols-1 gap-3">
+              <Button
+                className="w-full py-5 text-md md:text-lg"
+                size="lg"
+                disabled={true}
+              >
+                Buy this item
+              </Button>
+              <Button
+                type="submit"
+                className="w-full py-5 text-md md:text-lg"
+                variant="outline"
+                size="lg"
+              >
+                Add to cart
+              </Button>
+            </div>
 
-          <div className="flex justify-around items-center p-2">
-            <h4 className="flex gap-2 justify-center items-center text-sm">
-              <MessageCircle size={15} />
-              <span>Chat</span>
-            </h4>
-            <h4 className="flex gap-2 justify-center items-center text-sm">
-              <Heart size={15} />
-              <span>Whislist</span>
-            </h4>
-            <h4 className="flex gap-2 justify-center items-center text-sm">
-              <Recycle size={15} />
-              <span> Share</span>
-            </h4>
-          </div>
-        </div>
+            <div className="flex justify-around items-center p-2">
+              <h4 className="flex gap-2 justify-center items-center text-sm">
+                <MessageCircle size={15} />
+                <span>Chat</span>
+              </h4>
+              <h4 className="flex gap-2 justify-center items-center text-sm">
+                <Heart size={15} />
+                <span>Whislist</span>
+              </h4>
+              <h4 className="flex gap-2 justify-center items-center text-sm">
+                <Recycle size={15} />
+                <span> Share</span>
+              </h4>
+            </div>
+          </form>
+        </Form>
       </section>
 
       <section className="mx-auto max-w-[1200px] px-4">

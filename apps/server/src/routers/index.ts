@@ -1,11 +1,128 @@
 import { z } from "zod";
 import prisma from "../../prisma";
-import { publicProcedure, router } from "../lib/trpc";
+import { publicProcedure, protectedProcedure, router } from "../lib/trpc";
+import { auth } from "../lib/auth";
 
 export const appRouter = router({
   healthCheck: publicProcedure.query(() => {
     return "Connection OK!";
   }),
+  auth: {
+    getSession: protectedProcedure.query(({ ctx }) => {
+      return {
+        message: "User Authenticated!",
+        user: ctx.session.user,
+      };
+    }),
+    login: publicProcedure
+      .input(
+        z.object({
+          email: z
+            .string()
+            .min(1, "This field is required.")
+            .email("This is not a valid email."),
+          password: z
+            .string()
+            .min(8, "Password must be atleast 8 characters long."),
+        })
+      )
+      .mutation(async ({ input, ctx }) => {
+        const { email, password } = input;
+        try {
+          const betterAuthResponse = await auth.api.signInEmail({
+            body: {
+              email,
+              password,
+            },
+            asResponse: true, // returns a response object instead of data
+          });
+
+          if (!betterAuthResponse.ok) {
+            const errorData = await betterAuthResponse.json();
+            throw new Error(errorData.message || "Authentication failed");
+          }
+
+          const setCookieHeaders = betterAuthResponse.headers.getSetCookie();
+
+          setCookieHeaders.forEach((cookieString) => {
+            ctx.honoContext.header("set-cookie", cookieString, {
+              append: true,
+            });
+          });
+
+          return { success: true, message: "User authenticated!" };
+        } catch (error) {
+          if (error instanceof Error) {
+            return { success: false, message: error.message };
+          }
+          return { success: false, message: "Unkown error" };
+        }
+      }),
+    register: publicProcedure
+      .input(
+        z.object({
+          email: z
+            .string()
+            .min(1, "This field is required.")
+            .email("This is not a valid email."),
+          password: z
+            .string()
+            .min(8, "Password must be atleast 8 characters long."),
+          name: z.string().min(1, "This field is required."),
+        })
+      )
+      .mutation(async ({ input, ctx }) => {
+        const { email, password, name } = input;
+        try {
+          const betterAuthResponse = await auth.api.signUpEmail({
+            body: {
+              email,
+              password,
+              name,
+            },
+            asResponse: true, // returns a response object instead of data
+          });
+
+          if (!betterAuthResponse.ok) {
+            const errorData = await betterAuthResponse.json();
+            throw new Error(errorData.message || "Authentication failed");
+          }
+
+          const setCookieHeaders = betterAuthResponse.headers.getSetCookie();
+
+          setCookieHeaders.forEach((cookieString) => {
+            ctx.honoContext.header("set-cookie", cookieString, {
+              append: true,
+            });
+          });
+
+          return { success: true, message: "User registered!" };
+        } catch (error) {
+          if (error instanceof Error) {
+            return { success: false, message: error.message };
+          }
+          return { success: false, message: "Unkown error" };
+        }
+      }),
+    logout: protectedProcedure.query(async ({ ctx }) => {
+      const signOutResponse = await auth.api.signOut({
+        headers: ctx.honoContext.req.raw.headers, // Pass current request headers for session identification
+        asResponse: true,
+      });
+
+      // These headers will typically have Max-Age=0 or an expired date.
+      const setCookieHeaders = signOutResponse.headers.getSetCookie();
+
+      // This is how the browser receives the instruction to delete the cookie.
+      setCookieHeaders.forEach((cookieString) => {
+        ctx.honoContext.header("Set-Cookie", cookieString, { append: true });
+      });
+
+      // BetterAuth handles the server-side invalidation of the session internally
+      // when `signOut` is called.
+      return { success: true, message: "Logged out successfully!" };
+    }),
+  },
   product: {
     list: publicProcedure
       .input(
@@ -125,74 +242,69 @@ export const appRouter = router({
     },
   },
   cart: {
-    getCart: publicProcedure
-      .input(
-        z.object({
-          userId: z.string().min(1, "User ID is required."), // TODO: user session and context
-        })
-      )
-      .query(async ({ input }) => {
-        const { userId } = input;
-
-        const cart = await prisma.cart.findUnique({
-          where: { userId },
-          include: {
-            items: {
-              include: {
-                product: {
-                  // Include product details for each item in the cart
-                  select: {
-                    id: true,
-                    name: true,
-                    sku: true,
-                    price: true,
-                    imageUrl: true,
-                    stockQuantity: true,
-                    minimumOrderQuantity: true,
-                  },
+    getCart: protectedProcedure.query(async ({ ctx }) => {
+      const cart = await prisma.cart.findUnique({
+        where: { userId: ctx.session.user.id },
+        include: {
+          items: {
+            include: {
+              product: {
+                // Include product details for each item in the cart
+                select: {
+                  id: true,
+                  name: true,
+                  sku: true,
+                  price: true,
+                  imageUrl: true,
+                  stockQuantity: true,
+                  minimumOrderQuantity: true,
                 },
               },
             },
           },
-        });
+        },
+      });
 
-        if (!cart) {
-          return {
-            id: null,
-            userId: userId,
-            items: [],
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          };
-        }
+      if (!cart) {
+        return {
+          id: null,
+          userId: "",
+          items: [],
+          createdAt: new Date().toLocaleDateString(),
+          updatedAt: new Date().toLocaleDateString(),
+        };
+      }
 
-        return cart;
-      }),
-    addToCart: publicProcedure
+      return cart;
+    }),
+    addToCart: protectedProcedure
       .input(
         z.object({
-          userId: z.string(), // TODO: context + session
           productId: z.string(),
           quantity: z.number().int().min(1),
         })
       )
-      .mutation(async ({ input }) => {
-        const { userId, productId, quantity } = input;
+      .mutation(async ({ input, ctx }) => {
+        const { productId, quantity } = input;
 
         // Use a transaction
         const cartOperationResult = await prisma.$transaction(async (tx) => {
-          let cart = await tx.cart.findUnique({ where: { userId } });
+          let cart = await tx.cart.findUnique({
+            where: { userId: ctx.session?.user.id },
+          });
 
           if (!cart) {
             const userExists = await tx.user.findUnique({
-              where: { id: userId },
+              where: { id: ctx.session.user.id },
             });
 
             if (!userExists) {
               throw new Error("User not found. Cannot create cart.");
             }
             // create cart
-            cart = await tx.cart.create({ data: { userId } });
+            cart = await tx.cart.create({
+              data: { userId: ctx.session.user.id },
+            });
           }
 
           const product = await tx.product.findUnique({
