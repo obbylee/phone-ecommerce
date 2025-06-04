@@ -21,6 +21,7 @@ export const auth = betterAuth({
   cookie: {
     secure: process.env.NODE_ENV === "production",
     httpOnly: true, // Usually good to keep this true
-    sameSite: "none",
+    sameSite: "lax",
+    domain: process.env.COOKIE_DOMAIN,
   },
 });
