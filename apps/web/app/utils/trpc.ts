@@ -8,6 +8,15 @@ export const trpcClient = createTRPCClient<AppRouter>({
   links: [
     httpBatchLink({
       url: `${import.meta.env.VITE_SERVER_URL}/api`,
+      fetch: (url, options) => {
+        // Explicitly cast `options` to `RequestInit` to satisfy TypeScript
+        // when spreading its properties into the fetch options object.
+        const fetchOptions: RequestInit = {
+          ...(options as RequestInit),
+          credentials: "include",
+        };
+        return fetch(url, fetchOptions);
+      },
     }),
   ],
 });

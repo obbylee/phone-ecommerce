@@ -52,9 +52,13 @@ export default function Route() {
     try {
       const response = await trpcClient.auth.login.mutate(values);
 
-      if (response.success) {
-        toast.info("User authenticated!");
+      if (response.success === true) {
+        toast.info(response.message);
         navigate("/", { replace: true });
+      }
+
+      if (response.success === false) {
+        toast.info(response.message);
       }
 
       return;
@@ -63,7 +67,7 @@ export default function Route() {
         toast.error(error.message);
         return;
       }
-      toast.error("An unkown error detected");
+      toast.error("Internal server error!");
     } finally {
       setIsLoading(false);
     }

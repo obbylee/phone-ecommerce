@@ -18,4 +18,9 @@ export const auth = betterAuth({
     enabled: true,
   },
   trustedOrigins: ALLOWED_CORS,
+  cookie: {
+    secure: process.env.NODE_ENV === "production",
+    httpOnly: true, // Usually good to keep this true
+    sameSite: "none",
+  },
 });

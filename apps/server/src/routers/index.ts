@@ -39,13 +39,16 @@ export const appRouter = router({
 
           if (!betterAuthResponse.ok) {
             const errorData = await betterAuthResponse.json();
-            throw new Error(errorData.message || "Authentication failed");
+            throw new Error(
+              errorData.message ||
+                "Authentication failed due to invalid credentials."
+            );
           }
 
           const setCookieHeaders = betterAuthResponse.headers.getSetCookie();
 
           setCookieHeaders.forEach((cookieString) => {
-            ctx.honoContext.header("set-cookie", cookieString, {
+            ctx.honoContext.header("Set-Cookie", cookieString, {
               append: true,
             });
           });
@@ -55,7 +58,7 @@ export const appRouter = router({
           if (error instanceof Error) {
             return { success: false, message: error.message };
           }
-          return { success: false, message: "Unkown error" };
+          return { success: false, message: "Internal server error" };
         }
       }),
     register: publicProcedure
@@ -91,7 +94,7 @@ export const appRouter = router({
           const setCookieHeaders = betterAuthResponse.headers.getSetCookie();
 
           setCookieHeaders.forEach((cookieString) => {
-            ctx.honoContext.header("set-cookie", cookieString, {
+            ctx.honoContext.header("Set-Cookie", cookieString, {
               append: true,
             });
           });
@@ -101,7 +104,7 @@ export const appRouter = router({
           if (error instanceof Error) {
             return { success: false, message: error.message };
           }
-          return { success: false, message: "Unkown error" };
+          return { success: false, message: "Internal server error" };
         }
       }),
     logout: protectedProcedure.query(async ({ ctx }) => {
