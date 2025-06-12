@@ -16,5 +16,5 @@ export function formatCurrency(
   }).format(amount);
 
   // Prepend "US " to the formatted string
-  return `US ${formattedCurrency}`;
+  return `${formattedCurrency}`;
 }

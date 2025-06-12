@@ -24,7 +24,7 @@ export default function Route({ loaderData }: Route.ComponentProps) {
   const { response } = loaderData;
   return (
     <>
-      <header className="mx-auto max-w-[1200px] flex justify-between items-center bg-white dark:bg-black sticky top-0">
+      <header className="z-20 mx-auto max-w-[1200px] flex justify-between items-center bg-white dark:bg-black sticky top-0">
         <a href="/" className="p-4 font-medium text-xl sm:text-2xl">
           Aliphone.com
         </a>
@@ -78,8 +78,26 @@ export default function Route({ loaderData }: Route.ComponentProps) {
 
       <div className="m-20" />
 
-      <footer className="container bg-white dark:bg-black fixed bottom-0 text-center">
-        Aliphone.com &copy; 2025
+      <footer className="bg-secondary text-secondary-foreground py-12 text-center">
+        <div className="container mx-auto px-4">
+          <p className="mb-4">
+            &copy; {new Date().getFullYear()} Aliphone. All rights reserved.
+          </p>
+          <nav className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6">
+            <a href="/" className="hover:text-primary transition-colors">
+              About Us
+            </a>
+            <a href="/" className="hover:text-primary transition-colors">
+              Contact
+            </a>
+            <a href="/" className="hover:text-primary transition-colors">
+              Privacy Policy
+            </a>
+            <a href="/" className="hover:text-primary transition-colors">
+              Terms of Service
+            </a>
+          </nav>
+        </div>
       </footer>
     </>
   );
