@@ -15,9 +15,9 @@ A modern web application built to showcase a catalog of realistic mobile phones,
 - **Product Search:** Ability to search products by keyword.
 - **Advanced Product Browse:** Features for sorting, filtering, and pagination of products based on various criteria.
 - **Product Categories:** Organization of products into distinct categories for easier navigation.
-  <!-- - **User Authentication & Authorization:** Basic implementation of user sign-up, login, and role-based access control. -->
-  <!-- - **Shopping Cart & Checkout:** A complete flow for adding products to a cart and proceeding through a checkout process. -->
-  <!-- - **Admin Dashboard:** A dedicated interface for administrators to manage products, monitor transactions, and oversee application data. -->
+- **User Authentication & Authorization:** Basic implementation of user sign-up, login, and role-based access control.
+- **Shopping Cart & Checkout:** A complete flow for adding products to a cart and proceeding through a checkout process.
+- **Admin Dashboard:** A dedicated interface for administrators to manage products, monitor transactions, and oversee application data.
 
 ## 🚀 Live Demo
 
@@ -40,8 +40,8 @@ For the very latest features, bug fixes, and ongoing development work, please **
 - **API Layer:** **tRPC**
 - **ORM:** **Prisma**
 - **Database:** **PostgreSQL**
-  <!-- - **Authentication (Optional):** **Better Auth** -->
-  <!-- * **Monorepo Tool (Optional):** **Turborepo** -->
+- **Authentication:** **Better Auth**
+<!-- * **Monorepo Tool (Optional):** **Turborepo** -->
 - **Containerization:** **Docker Compose** (primarily for local database setup)
 - **Tools:** **ESLint** with **Prettier**
 - **Deployment:** **Vercel**
@@ -357,9 +357,6 @@ The frontend application should now be running at http://localhost:5173
 * **Learning & Integrating tRPC with Hono:**
   - **Challenge:** As a newly learned technology, integrating **tRPC** into our Hono backend from scratch involved a steep learning curve and understanding its core concepts.
   - **Lesson Learned:** By building a well-structured **tRPC** within our Hono application, we successfully enabled every tRPC resolver to securely receive necessary resources. This hands-on experience solidified our understanding of tRPC's power in maintaining end-to-end type safety and efficient resource management across the API layer.
-
-- **Work in Progress: Better Auth & Turborepo Workspaces:**
-  - **Current State:** We're actively working on integrating **Better Auth** for a comprehensive authentication solution and transitioning to a full **Turborepo** monorepo workspace. These efforts aim to further streamline our development workflow and optimize build performance.
 
 🤝 Contributing
 Contributions are welcome! If you have suggestions for improvements or find a bug, please open an issue or submit a pull request.

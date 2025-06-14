@@ -1,4 +1,6 @@
 import { type ColumnDef } from "@tanstack/react-table";
+import { Edit } from "lucide-react";
+import { Button } from "~/components/ui/button";
 
 export type Product = {
   id: string;
@@ -97,12 +99,28 @@ export const columns: ColumnDef<Product>[] = [
   {
     accessorKey: "categoryId",
     header: "Category",
-    // 'cell' receives info object where 'info.getValue()' is the value of 'category'
     cell: (info) => info.getValue() ?? "N/A",
   },
   {
     accessorKey: "actions",
     header: "Actions",
-    cell: (info) => <span>-</span>,
+    cell: ({ row, table }) => {
+      // Access the 'onEdit' function passed via the table's meta property
+
+      const { onEdit } = table.options.meta as {
+        onEdit: (product: Product) => void;
+      };
+      const product = row.original;
+
+      return (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => onEdit(product)} // Call onEdit with the product data
+        >
+          <Edit className="h-4 w-4" />
+        </Button>
+      );
+    },
   },
 ];

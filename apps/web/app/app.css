@@ -17,6 +17,66 @@ body {
   }
 }
 
+/* --- WebKit Browsers (Chrome, Safari, Edge) --- */
+
+/* Styles for the scrollbar itself */
+html::-webkit-scrollbar {
+  width: 8px; /* Width of the vertical scrollbar */
+  height: 8px; /* Height of the horizontal scrollbar */
+}
+
+/* Styles for the scrollbar track (the background area) */
+html::-webkit-scrollbar-track {
+  background-color: theme(
+    "colors.gray.100"
+  ); /* Light mode track: very light gray */
+  border-radius: 9999px; /* Rounded-full */
+}
+
+/* Styles for the scrollbar thumb (the draggable part) */
+html::-webkit-scrollbar-thumb {
+  background-color: theme("colors.gray.700"); /* Light mode thumb: dark gray */
+  border-radius: 9999px; /* Rounded-full */
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+/* Styles for the scrollbar thumb on hover */
+html::-webkit-scrollbar-thumb:hover {
+  background-color: theme("colors.gray.900"); /* Darker thumb on hover */
+}
+
+/* --- Dark Mode for WebKit Browsers --- */
+html.dark::-webkit-scrollbar-track {
+  background-color: theme(
+    "colors.gray.900"
+  ); /* Dark mode track: almost black */
+}
+
+html.dark::-webkit-scrollbar-thumb {
+  background-color: theme("colors.gray.300"); /* Dark mode thumb: light gray */
+}
+
+html.dark::-webkit-scrollbar-thumb:hover {
+  background-color: theme(
+    "colors.gray.100"
+  ); /* Lighter thumb on hover in dark mode */
+}
+
+/* --- Firefox --- */
+
+/* Styles for the scrollbar width and color in Firefox */
+html {
+  scrollbar-width: thin; /* 'auto' (default) or 'thin' */
+  /* scrollbar-color: <thumb-color> <track-color>; */
+  scrollbar-color: theme("colors.gray.700") theme("colors.gray.100"); /* Light mode */
+}
+
+/* Dark Mode for Firefox */
+html.dark {
+  scrollbar-color: theme("colors.gray.300") theme("colors.gray.900"); /* Dark mode */
+}
+
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);

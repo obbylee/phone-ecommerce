@@ -180,32 +180,52 @@ export const appRouter = router({
       const product = await prisma.product.findFirst({
         where: { OR: [{ slug: input }, { name: input }] },
       });
-      console.log(product);
       return product;
     }),
-    // search: publicProcedure.input()
     create: publicProcedure
       .input(
         z.object({
+          id: z.string().optional(),
           sku: z.string(),
           slug: z.string(),
           name: z.string(),
-          description: z.string(),
+          description: z.string().or(z.literal("")),
           price: z.number(),
           imageUrl: z.string(),
           stockQuantity: z.number(),
           minimumOrderQuantity: z.number(),
-          isFeatured: z.boolean(),
-          isActive: z.boolean(),
           categoryId: z.string(),
-          userId: z.string(),
         })
       )
       .mutation(async ({ input }) => {
-        const result = await prisma.product.create({
-          data: input,
-        });
-        return result;
+        const { id, ...data } = input;
+        const payload = { ...data, isFeatured: false, isActive: true };
+        try {
+          if (id) {
+            const productExist = await prisma.product.findUnique({
+              where: { id: id },
+            });
+
+            if (!productExist) {
+              throw new Error("No product found to be updated!");
+            }
+
+            const updatedProduct = await prisma.product.update({
+              where: { id: id },
+              data: payload,
+            });
+
+            return updatedProduct;
+          } else {
+            const newProduct = await prisma.product.create({ data: payload });
+            return newProduct;
+          }
+        } catch (error) {
+          if (error instanceof Error) {
+            throw new Error(error.message);
+          }
+          throw new Error("Internal server error");
+        }
       }),
     categories: publicProcedure.query(async () => {
       const result = await prisma.productCategory.findMany();

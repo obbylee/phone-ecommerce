@@ -50,11 +50,15 @@ import { Input } from "~/components/ui/input";
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
+  tableOptions?: Partial<
+    Omit<ReturnType<typeof useReactTable<TData>>["options"], "data" | "columns">
+  >;
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
+  tableOptions = {},
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
@@ -93,6 +97,7 @@ export function DataTable<TData, TValue>({
       columnFilters,
       columnVisibility,
     },
+    ...tableOptions,
   });
 
   return (
